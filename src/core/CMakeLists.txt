@@ -8,6 +8,8 @@ add_library(core STATIC)
 set(CORE_SOURCES
     ipc_client.cpp
     ipc_server.cpp
+    network_client.cpp
+    remote_executor.cpp
 )
 
 target_sources(core PRIVATE

@@ -1,6 +1,6 @@
 ﻿/**
  * @file plugin_interface.h
- * @brief Plugin interface for dynamic plugin loading
+ * @brief Plugin interface for dynamic plugin loading with agent commands
  */
 
 #pragma once
@@ -8,6 +8,7 @@
 #include <QString>
 #include <QVariantMap>
 #include <functional>
+#include <QStringList>
 
 /**
  * @brief Plugin status enumeration
@@ -20,11 +21,26 @@ enum class PluginStatus {
 };
 
 /**
+ * @brief Command callback function type
+ */
+using CommandCallback = std::function<QVariantMap(const QVariantMap&)>;
+
+/**
+ * @brief Command descriptor structure
+ */
+struct CommandDescriptor {
+    QString name;           ///< Command name
+    QString description;    ///< Command description
+    QStringList parameters; ///< Required parameters
+    CommandCallback callback; ///< Command execution callback
+};
+
+/**
  * @brief Interface for dynamic plugin loading
  *
  * Defines the contract that all plugins must implement.
  * Supports lifecycle management, configuration, execution,
- * and status monitoring.
+ * status monitoring, and agent command registration.
  */
 class IPlugin {
 public:
@@ -87,6 +103,42 @@ public:
      * @return Result map
      */
     virtual QVariantMap executeWithParams(const QVariantMap& params) = 0;
+
+    // Agent commands
+    /**
+     * @brief Registers a command that can be executed by the agent
+     * @param descriptor Command descriptor
+     * @return true if registration succeeded, false otherwise
+     */
+    virtual bool registerCommand(const CommandDescriptor& descriptor) = 0;
+
+    /**
+     * @brief Unregisters a command
+     * @param commandName Name of the command to unregister
+     * @return true if unregistration succeeded, false otherwise
+     */
+    virtual bool unregisterCommand(const QString& commandName) = 0;
+
+    /**
+     * @brief Executes a registered command
+     * @param commandName Name of the command to execute
+     * @param params Command parameters
+     * @return Result map
+     */
+    virtual QVariantMap executeCommand(const QString& commandName, const QVariantMap& params) = 0;
+
+    /**
+     * @brief Gets all registered commands
+     * @return List of command names
+     */
+    virtual QStringList getRegisteredCommands() const = 0;
+
+    /**
+     * @brief Gets command descriptor
+     * @param commandName Name of the command
+     * @return Command descriptor
+     */
+    virtual CommandDescriptor getCommandDescriptor(const QString& commandName) const = 0;
 
     // Status and monitoring
     /**

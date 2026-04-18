@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" 
+           Name="Secure Remote Agent" 
+           Language="1033" 
+           Version="1.0.0.0" 
+           Manufacturer="Revitalyr" 
+           UpgradeCode="GUID-GOES-HERE">
+    
+    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+    
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Secure Remote Agent is already installed." />
+    
+    <Media Id="1" Cabinet="SecureRemoteAgent.cab" EmbedCab="yes" />
+    
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="Secure Remote Agent" />
+      </Directory>
+      
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ProgramMenuDir" Name="Secure Remote Agent">
+          <Component Id="ProgramMenuComponent" Guid="*">
+            <Shortcut Id="DesktopShortcut" 
+                      Name="Secure Remote Agent" 
+                      Description="Windows Service-based multi-agent system" 
+                      Target="[INSTALLFOLDER]main.exe" 
+                      WorkingDirectory="INSTALLFOLDER" />
+            <RemoveFolder Id="ProgramMenuDir" On="uninstall" />
+            <RegistryValue Root="HKCU" 
+                           Key="Software\Revitalyr\SecureRemoteAgent" 
+                           Name="installed" 
+                           Type="integer" 
+                           Value="1" 
+                           KeyPath="yes" />
+          </Component>
+        </Directory>
+      </Directory>
+      
+      <Directory Id="DesktopFolder" Name="Desktop">
+        <Component Id="DesktopShortcutComponent" Guid="*">
+          <Shortcut Id="DesktopShortcut" 
+                    Name="Secure Remote Agent" 
+                    Description="Windows Service-based multi-agent system" 
+                    Target="[INSTALLFOLDER]main.exe" 
+                    WorkingDirectory="INSTALLFOLDER" />
+          <RemoveFolder Id="DesktopFolder" On="uninstall" />
+          <RegistryValue Root="HKCU" 
+                         Key="Software\Revitalyr\SecureRemoteAgent" 
+                         Name="desktop_shortcut" 
+                         Type="integer" 
+                         Value="1" 
+                         KeyPath="yes" />
+        </Component>
+      </Directory>
+    </Directory>
+    
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="MainExecutable" Guid="*">
+        <File Id="MainExe" Source="build\Release\main.exe" KeyPath="yes" />
+      </Component>
+      
+      <Component Id="ServiceExecutable" Guid="*">
+        <File Id="ServiceExe" Source="build\Release\service_main.exe" />
+      </Component>
+      
+      <Component Id="AgentExecutable" Guid="*">
+        <File Id="AgentExe" Source="build\Release\agent.exe" />
+      </Component>
+      
+      <Component Id="DemoSimulatorExecutable" Guid="*">
+        <File Id="DemoSimulatorExe" Source="build\Release\demo_simulator.exe" />
+      </Component>
+      
+      <Component Id="PluginDLLs" Guid="*">
+        <File Id="ProxyPlugin" Source="build\Release\plugins\proxy_plugin.dll" />
+        <File Id="ScraperPlugin" Source="build\Release\plugins\scraper_plugin.dll" />
+      </Component>
+      
+      <Component Id="ConfigFiles" Guid="*">
+        <File Id="ServiceConfig" Source="config\service.json" />
+        <File Id="NetworkConfig" Source="config\network.json" />
+        <File Id="PluginsConfig" Source="config\plugins.json" />
+      </Component>
+      
+      <Component Id="Certificates" Guid="*">
+        <File Id="CACert" Source="certs\ca.crt" />
+        <File Id="ClientCert" Source="certs\client.crt" />
+        <File Id="ClientKey" Source="certs\client.key" />
+      </Component>
+      
+      <Component Id="Documentation" Guid="*">
+        <File Id="Readme" Source="README.md" />
+        <File Id="License" Source="LICENSE" />
+      </Component>
+    </DirectoryRef>
+    
+    <Feature Id="Complete" Title="Complete" Level="1">
+      <ComponentRef Id="MainExecutable" />
+      <ComponentRef Id="ServiceExecutable" />
+      <ComponentRef Id="AgentExecutable" />
+      <ComponentRef Id="DemoSimulatorExecutable" />
+      <ComponentRef Id="PluginDLLs" />
+      <ComponentRef Id="ConfigFiles" />
+      <ComponentRef Id="Certificates" />
+      <ComponentRef Id="Documentation" />
+      <ComponentRef Id="ProgramMenuComponent" />
+      <ComponentRef Id="DesktopShortcutComponent" />
+    </Feature>
+    
+    <Feature Id="Service" Title="Windows Service" Level="1">
+      <ComponentRef Id="ServiceExecutable" />
+      <ComponentRef Id="AgentExecutable" />
+    </Feature>
+    
+    <Feature Id="Plugins" Title="Plugins" Level="1">
+      <ComponentRef Id="PluginDLLs" />
+    </Feature>
+    
+    <Feature Id="Demo" Title="Demo Components" Level="1">
+      <ComponentRef Id="DemoSimulatorExecutable" />
+    </Feature>
+    
+    <UIRef Id="WixUI_InstallDir" />
+    <UIRef Id="WixUI_ErrorProgressText" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    
+    <WixVariable Id="WixUILicenseRtf" Value="installer\License.rtf" />
+    
+    <CustomAction Id="InstallService" 
+                  Directory="INSTALLFOLDER" 
+                  ExeCommand="sc create &quot;SecureRemoteAgent&quot; binPath=&quot;[INSTALLFOLDER]service_main.exe&quot;" 
+                  Execute="deferred" 
+                  Impersonate="no" />
+    
+    <CustomAction Id="StartService" 
+                  Directory="INSTALLFOLDER" 
+                  ExeCommand="sc start &quot;SecureRemoteAgent&quot;" 
+                  Execute="deferred" 
+                  Impersonate="no" />
+    
+    <CustomAction Id="StopService" 
+                  Directory="INSTALLFOLDER" 
+                  ExeCommand="sc stop &quot;SecureRemoteAgent&quot;" 
+                  Execute="deferred" 
+                  Impersonate="no" />
+    
+    <CustomAction Id="UninstallService" 
+                  Directory="INSTALLFOLDER" 
+                  ExeCommand="sc delete &quot;SecureRemoteAgent&quot;" 
+                  Execute="deferred" 
+                  Impersonate="no" />
+    
+    <InstallExecuteSequence>
+      <Custom Action="InstallService" After="InstallFinalize">NOT Installed</Custom>
+      <Custom Action="StartService" After="InstallService">NOT Installed</Custom>
+      <Custom Action="StopService" Before="RemoveFiles">REMOVE=&quot;ALL&quot;</Custom>
+      <Custom Action="UninstallService" After="StopService">REMOVE=&quot;ALL&quot;</Custom>
+    </InstallExecuteSequence>
+    
+  </Product>
+</Wix>
