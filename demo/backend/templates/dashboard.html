@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Remote Agent - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0.5rem 0;
+        }
+        
+        .metric-value {
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .status-active { background: #27ae60; }
+        .status-inactive { background: #e74c3c; }
+        .status-warning { background: #f39c12; }
+        
+        .chart-container {
+            position: relative;
+            height: 200px;
+            margin-top: 1rem;
+        }
+        
+        .log-container {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+        
+        .log-entry {
+            margin: 0.25rem 0;
+            padding: 0.25rem;
+            border-radius: 4px;
+        }
+        
+        .log-info { background: #e3f2fd; color: #1976d2; }
+        .log-warning { background: #fff3e0; color: #f57c00; }
+        .log-error { background: #ffebee; color: #d32f2f; }
+        
+        .refresh-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            background: #2980b9;
+        }
+        
+        .agent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .agent-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            border-left: 4px solid #3498db;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #3498db;
+            transition: width 0.3s ease;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: white;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Secure Remote Agent - Dashboard</h1>
+        <button class="refresh-btn" onclick="refreshData()">Refresh Data</button>
+    </div>
+    
+    <div class="container">
+        <div class="grid">
+            <!-- System Metrics -->
+            <div class="card">
+                <h3>System Metrics</h3>
+                <div class="metric">
+                    <span>CPU Usage</span>
+                    <span class="metric-value" id="cpu-usage">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="cpu-progress" style="width: 0%"></div>
+                </div>
+                
+                <div class="metric">
+                    <span>Memory Usage</span>
+                    <span class="metric-value" id="memory-usage">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="memory-progress" style="width: 0%"></div>
+                </div>
+                
+                <div class="metric">
+                    <span>Disk Usage</span>
+                    <span class="metric-value" id="disk-usage">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="disk-progress" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <!-- Agents Status -->
+            <div class="card">
+                <h3>Connected Agents</h3>
+                <div id="agents-container" class="agent-grid">
+                    <!-- Agents will be populated here -->
+                </div>
+            </div>
+            
+            <!-- Plugin Status -->
+            <div class="card">
+                <h3>Plugin Status</h3>
+                <div id="plugins-container">
+                    <!-- Plugins will be populated here -->
+                </div>
+            </div>
+            
+            <!-- Scraper Plugin -->
+            <div class="card">
+                <h3>Scraper Plugin</h3>
+                <div style="margin-bottom: 1rem;">
+                    <input type="text" id="scrape-url" value="https://example.com/" 
+                           style="width: 70%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                    <button onclick="scrapeUrl()" class="refresh-btn" style="margin-left: 0.5rem;">Scrap</button>
+                </div>
+                <div id="scrape-results" class="log-container" style="max-height: 200px;">
+                    <!-- Scrape results will appear here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Performance Charts -->
+        <div class="grid">
+            <div class="card">
+                <h3>CPU Performance</h3>
+                <div class="chart-container">
+                    <canvas id="cpu-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Memory Performance</h3>
+                <div class="chart-container">
+                    <canvas id="memory-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scraped Data -->
+        <div class="card">
+            <h3>Scraped Data</h3>
+            <div id="scraped-data-container" class="log-container" style="max-height: 300px;">
+                <div class="log-entry log-info">No scraped data yet. Use Scraper Plugin to scrape URLs.</div>
+            </div>
+        </div>
+
+        <!-- Log Stream -->
+        <div class="card">
+            <h3>Log Stream</h3>
+            <div id="log-container" class="log-container">
+                <!-- Logs will be populated here -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Secure Remote Agent Demo Dashboard | Real-time Monitoring</p>
+    </div>
+    
+    <script>
+        // Global variables for charts
+        let cpuChart, memoryChart;
+        let cpuData = [];
+        let memoryData = [];
+        
+        // Initialize charts
+        function initCharts() {
+            const cpuCtx = document.getElementById('cpu-chart').getContext('2d');
+            cpuChart = new Chart(cpuCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'CPU Usage (%)',
+                        data: [],
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+            
+            const memoryCtx = document.getElementById('memory-chart').getContext('2d');
+            memoryChart = new Chart(memoryCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Memory Usage (%)',
+                        data: [],
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Fetch data from API
+        async function fetchData() {
+            try {
+                const [systemResponse, agentsResponse, pluginsResponse, logsResponse] = await Promise.all([
+                    fetch('/api/system'),
+                    fetch('/api/agents'),
+                    fetch('/api/plugins'),
+                    fetch('/api/logs?limit=50')
+                ]);
+
+                const systemData = await systemResponse.json();
+                const agentsData = await agentsResponse.json();
+                const pluginsData = await pluginsResponse.json();
+                const logsData = await logsResponse.json();
+
+                // Use first agent's metrics for system metrics display
+                const firstAgent = Object.values(agentsData)[0] || {};
+                const systemMetricsWithAgentData = {
+                    cpu_percent: firstAgent.cpu_usage || 0,
+                    memory_percent: firstAgent.memory_usage || 0,
+                    disk_percent: 0 // Disk metrics not available from agent
+                };
+
+                updateSystemMetrics(systemMetricsWithAgentData);
+                updateAgents(agentsData);
+                updatePlugins(pluginsData);
+                updateLogs(logsData);
+                updateCharts(systemMetricsWithAgentData);
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+        
+        // Update system metrics
+        function updateSystemMetrics(data) {
+            document.getElementById('cpu-usage').textContent = `${data.cpu_percent?.toFixed(1) || 0}%`;
+            document.getElementById('memory-usage').textContent = `${data.memory_percent?.toFixed(1) || 0}%`;
+            document.getElementById('disk-usage').textContent = `${data.disk_percent?.toFixed(1) || 0}%`;
+            
+            document.getElementById('cpu-progress').style.width = `${data.cpu_percent || 0}%`;
+            document.getElementById('memory-progress').style.width = `${data.memory_percent || 0}%`;
+            document.getElementById('disk-progress').style.width = `${data.disk_percent || 0}%`;
+        }
+        
+        // Update agents
+        function updateAgents(data) {
+            const container = document.getElementById('agents-container');
+            container.innerHTML = '';
+            
+            Object.values(data).forEach(agent => {
+                const agentCard = document.createElement('div');
+                agentCard.className = 'agent-card';
+                agentCard.innerHTML = `
+                    <div class="metric">
+                        <span><span class="status-indicator status-${agent.status}"></span>${agent.id}</span>
+                    </div>
+                    <div class="metric">
+                        <span>CPU</span>
+                        <span>${agent.cpu_usage?.toFixed(1) || 0}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${agent.cpu_usage || 0}%"></div>
+                    </div>
+                    <div class="metric">
+                        <span>Memory</span>
+                        <span>${agent.memory_usage?.toFixed(1) || 0}%</span>
+                    </div>
+                    <div class="metric">
+                        <span>Requests</span>
+                        <span>${agent.requests_handled || 0}</span>
+                    </div>
+                `;
+                container.appendChild(agentCard);
+            });
+        }
+        
+        // Update plugins
+        function updatePlugins(data) {
+            const container = document.getElementById('plugins-container');
+            container.innerHTML = '';
+            
+            Object.entries(data).forEach(([name, plugin]) => {
+                const pluginDiv = document.createElement('div');
+                pluginDiv.className = 'metric';
+                pluginDiv.innerHTML = `
+                    <span><span class="status-indicator status-${plugin.status === 'loaded' ? 'active' : 'inactive'}"></span>${name}</span>
+                    <span class="metric-value">${plugin.status}</span>
+                `;
+                container.appendChild(pluginDiv);
+                
+                // Add plugin-specific metrics
+                if (name === 'ProxyPlugin') {
+                    const metricDiv = document.createElement('div');
+                    metricDiv.className = 'metric';
+                    metricDiv.innerHTML = `
+                        <span>Requests Handled</span>
+                        <span>${plugin.requests_handled || 0}</span>
+                    `;
+                    container.appendChild(metricDiv);
+                } else if (name === 'ScraperPlugin') {
+                    const metricDiv = document.createElement('div');
+                    metricDiv.className = 'metric';
+                    metricDiv.innerHTML = `
+                        <span>Pages Scraped</span>
+                        <span>${plugin.pages_scraped || 0}</span>
+                    `;
+                    container.appendChild(metricDiv);
+                }
+            });
+        }
+        
+        // Update logs
+        function updateLogs(data) {
+            const container = document.getElementById('log-container');
+            container.innerHTML = '';
+            
+            data.slice().reverse().forEach(log => {
+                const logEntry = document.createElement('div');
+                logEntry.className = `log-entry log-${log.level.toLowerCase()}`;
+                logEntry.textContent = `[${new Date(log.timestamp).toLocaleTimeString()}] ${log.source}: ${log.message}`;
+                container.appendChild(logEntry);
+            });
+            
+            // Auto-scroll to top
+            container.scrollTop = 0;
+        }
+        
+        // Update charts
+        function updateCharts(data) {
+            const now = new Date().toLocaleTimeString();
+            
+            // Update CPU chart
+            if (cpuChart.data.labels.length > 20) {
+                cpuChart.data.labels.shift();
+                cpuChart.data.datasets[0].data.shift();
+            }
+            cpuChart.data.labels.push(now);
+            cpuChart.data.datasets[0].data.push(data.cpu_percent || 0);
+            cpuChart.update();
+            
+            // Update Memory chart
+            if (memoryChart.data.labels.length > 20) {
+                memoryChart.data.labels.shift();
+                memoryChart.data.datasets[0].data.shift();
+            }
+            memoryChart.data.labels.push(now);
+            memoryChart.data.datasets[0].data.push(data.memory_percent || 0);
+            memoryChart.update();
+        }
+        
+        // Refresh data
+        function refreshData() {
+            fetchData();
+        }
+        
+        // Scrape URL
+        async function scrapeUrl() {
+            const urlInput = document.getElementById('scrape-url');
+            const resultsContainer = document.getElementById('scrape-results');
+            const scrapedDataContainer = document.getElementById('scraped-data-container');
+            const url = urlInput.value;
+
+            resultsContainer.innerHTML = '<div class="log-entry log-info">Scraping: ' + url + '...</div>';
+
+            try {
+                const response = await fetch('/api/scrape', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    resultsContainer.innerHTML = '';
+                    data.results.forEach(result => {
+                        const div = document.createElement('div');
+                        div.className = 'log-entry log-info';
+                        div.textContent = result;
+                        resultsContainer.appendChild(div);
+                    });
+
+                    // Also add to Scraped Data panel
+                    const timestamp = new Date().toLocaleTimeString();
+                    const scrapedEntry = document.createElement('div');
+                    scrapedEntry.className = 'log-entry log-info';
+                    scrapedEntry.innerHTML = `<strong>[${timestamp}] ${url}</strong><br>` +
+                        data.results.map(r => `&nbsp;&nbsp;${r}`).join('<br>');
+                    scrapedDataContainer.insertBefore(scrapedEntry, scrapedDataContainer.firstChild);
+
+                    // Clear placeholder if it exists
+                    if (scrapedDataContainer.querySelector('.log-entry').textContent === 'No scraped data yet. Use Scraper Plugin to scrape URLs.') {
+                        scrapedDataContainer.innerHTML = '';
+                    }
+                } else {
+                    resultsContainer.innerHTML = '<div class="log-entry log-error">Error: ' + data.message + '</div>';
+                }
+            } catch (error) {
+                resultsContainer.innerHTML = '<div class="log-entry log-error">Error: ' + error.message + '</div>';
+            }
+        }
+
+        // Initialize and start auto-refresh
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            fetchData();
+            
+            // Auto-refresh every 3 seconds
+            setInterval(fetchData, 3000);
+        });
+    </script>
+</body>
+</html>

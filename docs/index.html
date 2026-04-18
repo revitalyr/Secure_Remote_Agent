@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Remote Agent - Documentation</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 0.5rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.5);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .diagram-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .scale-controls {
+            position: sticky;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            z-index: 1000;
+            background: white;
+            padding: 0.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .scale-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 4px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        .scale-btn:hover {
+            background: #764ba2;
+        }
+
+        .scale-display {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #667eea;
+            min-width: 45px;
+            text-align: center;
+        }
+
+        .feature-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-section h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        table th,
+        table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        table tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        @media (max-width: 768px) {
+            .nav-tabs {
+                flex-direction: column;
+            }
+
+            .nav-tab {
+                width: 100%;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .scale-controls {
+                position: sticky;
+                top: 10px;
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Secure Remote Agent</h1>
+            <p>Windows Service-based multi-agent system with IPC, plugin architecture, TLS encryption, and real-time monitoring</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-target="overview">📊 Overview</button>
+            <button class="nav-tab" data-target="architecture">🏗️ Architecture</button>
+            <button class="nav-tab" data-target="api">🔄 API</button>
+            <button class="nav-tab" data-target="ipc">🔌 IPC</button>
+            <button class="nav-tab" data-target="security">🛡️ Security</button>
+            <button class="nav-tab" data-target="deployment">🚀 Deployment</button>
+        </div>
+
+        <div class="content">
+            <!-- Overview Tab -->
+            <div id="overview" class="tab-content active">
+                <div class="feature-section">
+                    <h3>System Overview</h3>
+                    <p>Secure Remote Agent is a Windows Service-based multi-agent system designed for remote monitoring and management. The system integrates a Qt-based desktop UI, a Windows Service with plugin architecture, TLS-encrypted communication, and real-time monitoring capabilities.</p>
+                </div>
+
+                <div class="feature-section">
+                    <h3>Technology Stack</h3>
+                    <ul class="feature-list">
+                        <li>✅ C++23 with Visual Studio 2022</li>
+                        <li>✅ Qt 6.x (RemoteObjects, Network, Quick modules)</li>
+                        <li>✅ OpenSSL for TLS encryption</li>
+                        <li>✅ Python 3.9+ for backend server</li>
+                        <li>✅ CMake 3.21+ build system</li>
+                        <li>✅ Windows Service API</li>
+                    </ul>
+                </div>
+
+                <div class="diagram-container">
+                    <div class="scale-controls">
+                        <button class="scale-btn" data-scale-delta="-10">−</button>
+                        <span class="scale-display">100%</span>
+                        <button class="scale-btn" data-scale-delta="10">+</button>
+                        <button class="scale-btn" data-reset-scale>⟲</button>
+                    </div>
+                    <div class="mermaid">
+graph TD
+    A[Desktop UI<br/>Qt/QML] -->|IPC| B[Windows Service<br/>C++/Qt]
+    B -->|HTTPS| C[Backend Server<br/>Python/REST]
+    B -->|Plugins| D[Proxy Plugin<br/>HTTP/HTTPS]
+    B -->|Plugins| E[Scraper Plugin<br/>Web Scraping]
+    B -->|Metrics| F[Windows API<br/>CPU/Memory]
+    C -->|REST API| G[Web Dashboard<br/>Real-time Monitoring]
+    
+    style A fill:#667eea
+    style B fill:#667eea
+    style C fill:#764ba2
+    style D fill:#6c757d
+    style E fill:#6c757d
+    style F fill:#6c757d
+    style G fill:#28a745
+                    </div>
+                </div>
+
+                <div class="feature-section">
+                    <h3>Key Capabilities</h3>
+                    <ul class="feature-list">
+                        <li>✅ Real Windows Service implementation with proper lifecycle management</li>
+                        <li>✅ Qt RemoteObjects IPC for type-safe inter-process communication</li>
+                        <li>✅ Dynamic plugin architecture with standardized IPlugin interface</li>
+                        <li>✅ TLS 1.3 encryption with certificate management</li>
+                        <li>✅ Real-time system metrics monitoring (CPU, memory, uptime)</li>
+                        <li>✅ Web dashboard for remote monitoring and control</li>
+                        <li>✅ Plugin sandboxing and permission control</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Architecture Tab -->
+            <div id="architecture" class="tab-content">
+                <div class="feature-section">
+                    <h3>Component Architecture</h3>
+                    <p>The system consists of three main components: Desktop UI, Windows Service, and Backend Server. The Windows Service manages agent instances, loads plugins dynamically, and communicates with the backend via HTTPS.</p>
+                </div>
+
+                <div class="diagram-container">
+                    <div class="scale-controls">
+                        <button class="scale-btn" data-scale-delta="-10">−</button>
+                        <span class="scale-display">100%</span>
+                        <button class="scale-btn" data-scale-delta="10">+</button>
+                        <button class="scale-btn" data-reset-scale>⟲</button>
+                    </div>
+                    <div class="mermaid">
+sequenceDiagram
+    participant UI as Desktop UI
+    participant Service as Windows Service
+    participant IPC as IPC Server
+    participant Plugin as Plugin Manager
+    participant Backend as Backend Server
+    participant Dashboard as Web Dashboard
+
+    UI->>Service: Connect via IPC
+    Service->>IPC: Start IPC Server
+    Service->>Plugin: Load Plugins
+    Plugin-->>Service: Plugins Loaded
+    
+    loop Every 30 seconds
+        Service->>Backend: POST /api/heartbeat
+        Backend-->>Service: Heartbeat ACK
+    end
+    
+    loop Every 10 seconds
+        Service->>Backend: POST /api/plugins
+        Backend-->>Service: Plugin Status ACK
+    end
+    
+    loop Every 1 second
+        Service->>Service: Measure System Metrics
+        Service->>Backend: POST /api/metrics
+        Backend->>Dashboard: Update Metrics
+    end
+    
+    UI->>IPC: Request Metrics
+    IPC-->>UI: Return Metrics
+    UI->>UI: Update Display
+                    </div>
+                </div>
+
+                <div class="feature-section">
+                    <h3>Windows Service Components</h3>
+                    <table>
+                        <tr>
+                            <th>Component</th>
+                            <th>Responsibility</th>
+                        </tr>
+                        <tr>
+                            <td>ServiceMain</td>
+                            <td>Service entry point, lifecycle management</td>
+                        </tr>
+                        <tr>
+                            <td>ServiceController</td>
+                            <td>Core service logic, plugin management, metrics collection</td>
+                        </tr>
+                        <tr>
+                            <td>IPC Server</td>
+                            <td>Inter-process communication via Qt LocalServer</td>
+                        </tr>
+                        <tr>
+                            <td>Network Client</td>
+                            <td>HTTPS communication with backend server</td>
+                        </tr>
+                        <tr>
+                            <td>Plugin Manager</td>
+                            <td>Dynamic plugin loading and lifecycle control</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- API Tab -->
+            <div id="api" class="tab-content">
+                <div class="feature-section">
+                    <h3>REST API Endpoints</h3>
+                    <p>The backend server exposes REST API endpoints for receiving metrics, heartbeat, and plugin status from the Windows Service.</p>
+                </div>
+
+                <div class="diagram-container">
+                    <div class="scale-controls">
+                        <button class="scale-btn" data-scale-delta="-10">−</button>
+                        <span class="scale-display">100%</span>
+                        <button class="scale-btn" data-scale-delta="10">+</button>
+                        <button class="scale-btn" data-reset-scale>⟲</button>
+                    </div>
+                    <div class="mermaid">
+flowchart TD
+    Start[Service Start] --> Init[Initialize Components]
+    Init --> Load[Load Plugins]
+    Load --> HB[POST /api/heartbeat]
+    HB --> Metrics[POST /api/metrics]
+    Metrics --> Plugin[POST /api/plugins]
+    Plugin --> HB
+    
+    HB -->|Success| Success[200 OK]
+    HB -->|Error| ErrorHB[500 Error]
+    Metrics -->|Success| Success
+    Metrics -->|Error| ErrorMetrics[500 Error]
+    Plugin -->|Success| Success
+    Plugin -->|Error| ErrorPlugin[500 Error]
+    
+    Success --> Continue[Continue Loop]
+    ErrorHB --> Continue
+    ErrorMetrics --> Continue
+    ErrorPlugin --> Continue
+    Continue --> HB
+    
+    style Start fill:#667eea
+    style Init fill:#667eea
+    style Load fill:#667eea
+    style HB fill:#764ba2
+    style Metrics fill:#764ba2
+    style Plugin fill:#764ba2
+    style Success fill:#28a745
+    style ErrorHB fill:#dc3545
+    style ErrorMetrics fill:#dc3545
+    style ErrorPlugin fill:#dc3545
+    style Continue fill:#6c757d
+                    </div>
+                </div>
+
+                <div class="feature-section">
+                    <h3>API Reference</h3>
+                    <table>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Method</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>/api/heartbeat</td>
+                            <td>POST</td>
+                            <td>Service heartbeat with timestamp</td>
+                        </tr>
+                        <tr>
+                            <td>/api/metrics</td>
+                            <td>POST</td>
+                            <td>System metrics (CPU, memory, uptime)</td>
+                        </tr>
+                        <tr>
+                            <td>/api/plugins</td>
+                            <td>POST</td>
+                            <td>Plugin status and metrics</td>
+                        </tr>
+                        <tr>
+                            <td>/api/agents</td>
+                            <td>GET</td>
+                            <td>Retrieve connected agents</td>
+                        </tr>
+                        <tr>
+                            <td>/api/system</td>
+                            <td>GET</td>
+                            <td>Retrieve system information</td>
+                        </tr>
+                        <tr>
+                            <td>/api/logs</td>
+                            <td>GET</td>
+                            <td>Retrieve log entries</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- IPC Tab -->
+            <div id="ipc" class="tab-content">
+                <div class="feature-section">
+                    <h3>Inter-Process Communication</h3>
+                    <p>Qt RemoteObjects provides type-safe IPC between the Desktop UI and Windows Service. The IPC contract defines the communication protocol for metrics, control, and log streaming.</p>
+                </div>
+
+                <div class="diagram-container">
+                    <div class="scale-controls">
+                        <button class="scale-btn" data-scale-delta="-10">−</button>
+                        <span class="scale-display">100%</span>
+                        <button class="scale-btn" data-scale-delta="10">+</button>
+                        <button class="scale-btn" data-reset-scale>⟲</button>
+                    </div>
+                    <div class="mermaid">
+flowchart TD
+    UI[Desktop UI] -->|Connect| IPC[IPC Server<br/>Qt LocalServer]
+    Service[Windows Service] -->|Listen| IPC
+    
+    UI -->|ping| IPC
+    IPC -->|pong| UI
+    
+    UI -->|getMetrics| IPC
+    IPC -->|measureSystemMetrics| API[Windows API]
+    API -->|CPU/Memory| IPC
+    IPC -->|metrics| UI
+    
+    UI -->|startService| IPC
+    IPC -->|start| Service
+    
+    UI -->|loadPlugin| IPC
+    IPC -->|loadDLL| Plugin[Plugin DLL]
+    Plugin -->|initialized| IPC
+    IPC -->|pluginStatus| UI
+    
+    UI -->|getLogs| IPC
+    IPC -->|logStream| UI
+    
+    style UI fill:#667eea
+    style Service fill:#667eea
+    style IPC fill:#764ba2
+    style API fill:#6c757d
+    style Plugin fill:#6c757d
+                    </div>
+                </div>
+
+                <div class="feature-section">
+                    <h3>IPC Contract</h3>
+                    <ul class="feature-list">
+                        <li>✅ ping/pong - Connectivity testing</li>
+                        <li>✅ getMetrics - Retrieve system metrics</li>
+                        <li>✅ startService - Start Windows service</li>
+                        <li>✅ stopService - Stop Windows service</li>
+                        <li>✅ loadPlugin - Load plugin from DLL</li>
+                        <li>✅ unloadPlugin - Unload plugin</li>
+                        <li>✅ getPluginStatus - Get plugin status</li>
+                        <li>✅ getLogs - Retrieve log stream</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Security Tab -->
+            <div id="security" class="tab-content">
+                <div class="feature-section">
+                    <h3>Security Architecture</h3>
+                    <p>The system implements multiple layers of security including TLS 1.3 encryption, certificate management, service sandboxing, and least privilege principles.</p>
+                </div>
+
+                <div class="diagram-container">
+                    <div class="scale-controls">
+                        <button class="scale-btn" data-scale-delta="-10">−</button>
+                        <span class="scale-display">100%</span>
+                        <button class="scale-btn" data-scale-delta="10">+</button>
+                        <button class="scale-btn" data-reset-scale>⟲</button>
+                    </div>
+                    <div class="mermaid">
+flowchart TD
+    Client[Client] -->|TLS 1.3| Service[Windows Service]
+    Service -->|Mutual TLS| Backend[Backend Server]
+    
+    Service -->|Verify| Cert[Certificate<br/>Validation]
+    Cert -->|Valid| Success[Connection<br/>Established]
+    Cert -->|Invalid| Fail[Connection<br/>Rejected]
+    
+    Service -->|Least Privilege| Account[Service Account]
+    Account -->|Permissions| Perm[Minimal<br/>Permissions]
+    
+    Service -->|Sandboxing| Plugin[Plugin DLL]
+    Plugin -->|Permissions| PluginPerm[Restricted<br/>Permissions]
+    
+    Service -->|Audit Logging| Log[Event Viewer<br/>Audit Logs]
+    
+    style Client fill:#667eea
+    style Service fill:#667eea
+    style Backend fill:#764ba2
+    style Cert fill:#ffc107
+    style Success fill:#28a745
+    style Fail fill:#dc3545
+    style Account fill:#6c757d
+    style Perm fill:#6c757d
+    style Plugin fill:#6c757d
+    style PluginPerm fill:#6c757d
+    style Log fill:#6c757d
+                    </div>
+                </div>
+
+                <div class="feature-section">
+                    <h3>Security Features</h3>
+                    <ul class="feature-list">
+                        <li>✅ TLS 1.3 for all network communications</li>
+                        <li>✅ Certificate pinning for backend connections</li>
+                        <li>✅ Mutual TLS for service-to-service communication</li>
+                        <li>✅ Certificate validation (CA, client certificates)</li>
+                        <li>✅ SSL compression disabled</li>
+                        <li>✅ Empty fragments protection</li>
+                        <li>✅ Custom cipher suites</li>
+                        <li>✅ Least privilege service account</li>
+                        <li>✅ Plugin sandboxing and permission control</li>
+                        <li>✅ Audit logging for all operations</li>
+                        <li>✅ Secure configuration management</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Deployment Tab -->
+            <div id="deployment" class="tab-content">
+                <div class="feature-section">
+                    <h3>Build and Deployment Pipeline</h3>
+                    <p>The project uses CMake for cross-platform build configuration with vcpkg for dependency management. The Windows Service is installed using the Windows Service Control Manager (sc.exe).</p>
+                </div>
+
+                <div class="diagram-container">
+                    <div class="scale-controls">
+                        <button class="scale-btn" data-scale-delta="-10">−</button>
+                        <span class="scale-display">100%</span>
+                        <button class="scale-btn" data-scale-delta="10">+</button>
+                        <button class="scale-btn" data-reset-scale>⟲</button>
+                    </div>
+                    <div class="mermaid">
+flowchart TD
+    Source[Source Code] --> CMake[CMake<br/>Configure]
+    CMake --> Build[Build<br/>Release]
+    Build --> Service[Service Main.exe]
+    Build --> UI[Desktop UI.exe]
+    Build --> Plugins[Plugin DLLs]
+    
+    Service --> Install[sc create<br/>Install Service]
+    Install --> Start[sc start<br/>Start Service]
+    Start --> Running[Service Running]
+    
+    Backend[Backend Server] --> Python[Python<br/>Requirements]
+    Python --> StartBackend[Start Server]
+    StartBackend --> BackendRunning[Backend Running]
+    
+    Running -->|Connect| BackendRunning
+    UI -->|Connect| Running
+    
+    style Source fill:#667eea
+    style CMake fill:#764ba2
+    style Build fill:#764ba2
+    style Service fill:#6c757d
+    style UI fill:#6c757d
+    style Plugins fill:#6c757d
+    style Install fill:#ffc107
+    style Start fill:#28a745
+    style Running fill:#28a745
+    style Backend fill:#6c757d
+    style Python fill:#764ba2
+    style StartBackend fill:#28a745
+    style BackendRunning fill:#28a745
+                    </div>
+                </div>
+
+                <div class="feature-section">
+                    <h3>Build Commands</h3>
+                    <table>
+                        <tr>
+                            <th>Step</th>
+                            <th>Command</th>
+                        </tr>
+                        <tr>
+                            <td>Configure</td>
+                            <td>cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=[vcpkg-root]/scripts/buildsystems/vcpkg.cmake</td>
+                        </tr>
+                        <tr>
+                            <td>Build</td>
+                            <td>cmake --build build --config Release</td>
+                        </tr>
+                        <tr>
+                            <td>Install Service</td>
+                            <td>sc create "SecureRemoteAgent" binPath="[build-dir]\service\Release\service_main.exe"</td>
+                        </tr>
+                        <tr>
+                            <td>Start Service</td>
+                            <td>sc start "SecureRemoteAgent"</td>
+                        </tr>
+                        <tr>
+                            <td>Start Backend</td>
+                            <td>python server/app.py</td>
+                        </tr>
+                        <tr>
+                            <td>Launch UI</td>
+                            <td>app/SecureAgentUI.exe</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="feature-section">
+                    <h3>Configuration Files</h3>
+                    <ul class="feature-list">
+                        <li>✅ config/service.json - Service configuration</li>
+                        <li>✅ config/network.json - Backend URL and network settings</li>
+                        <li>✅ config/plugins.json - Plugin directories and settings</li>
+                        <li>✅ certs/ - TLS certificates directory</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="mermaid-height-util.js"></script>
+</body>
+</html>
