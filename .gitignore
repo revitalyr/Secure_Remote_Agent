@@ -1,0 +1,14 @@
+﻿build/
+build_unit/
+*.user
+*.vcxproj.user
+Debug/
+Release/
+*.tlog/
+*.recipe
+CMakeCache.txt
+CMakeFiles/
+CMakeConfigureLog.yaml
+cmake.check_cache
+Testing/
+.vs/

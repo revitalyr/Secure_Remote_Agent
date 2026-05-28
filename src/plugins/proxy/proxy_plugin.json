@@ -1,0 +1,7 @@
+{
+    "Keys": ["proxy"],
+    "className": "ProxyPlugin",
+    "name": "ProxyPlugin",
+    "version": "1.0.0",
+    "description": "HTTP/HTTPS proxy plugin for traffic interception"
+}

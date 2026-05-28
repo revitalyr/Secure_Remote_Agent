@@ -1,0 +1,17 @@
+class ServiceInterface
+{
+    PROP(QString serviceStatus)
+    PROP(double cpuUsage)
+    PROP(double memoryUsage)
+    PROP(double memoryTotal)
+    PROP(double memoryAvailable)
+    PROP(double netRxKbps)
+    PROP(double netTxKbps)
+    PROP(int uptime)
+
+    SLOT(void ping())
+    SLOT(void requestShutdown())
+
+    SIGNAL(pongReceived(QString message))
+    SIGNAL(logMessage(QString level, QString message))
+}

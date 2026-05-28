@@ -1,0 +1,7 @@
+{
+    "Keys": ["scraper"],
+    "className": "ScraperPlugin",
+    "name": "ScraperPlugin",
+    "version": "1.0.0",
+    "description": "Web scraper plugin for data extraction"
+}
